@@ -33,16 +33,16 @@ NEW_VER_NUMBER=$((CURRENT_VER_NUMBER + 1))
 echo "  Version: ${VERSION} (build ${NEW_VER_NUMBER})"
 
 # Update version strings
-sed -i "s/set(PROJECT_VER \".*\")/set(PROJECT_VER \"${VERSION}\")/" CMakeLists.txt
-sed -i "s/set(PROJECT_VER_NUMBER [0-9]*)/set(PROJECT_VER_NUMBER ${NEW_VER_NUMBER})/" CMakeLists.txt
-sed -i "s/\"version\": \".*\"/\"version\": \"${VERSION}\"/" web-installer/manifest.json
-sed -i "s/v[0-9]\+\.[0-9]\+\.[0-9]\+<\/span>/v${VERSION}<\/span>/" web-installer/index.html
+sed -i '' "s/set(PROJECT_VER \".*\")/set(PROJECT_VER \"${VERSION}\")/" CMakeLists.txt
+sed -i '' "s/set(PROJECT_VER_NUMBER [0-9]*/set(PROJECT_VER_NUMBER ${NEW_VER_NUMBER}/" CMakeLists.txt
+sed -i '' "s/\"version\": \".*\"/\"version\": \"${VERSION}\"/" web-installer/manifest.json
+sed -i '' "s/v[0-9]*\.[0-9]*\.[0-9]*<\/span>/v${VERSION}<\/span>/" web-installer/index.html
 
 echo "  Updated version strings"
 
 # Build firmware
 echo "  Building firmware..."
-source ~/esp/esp-idf/export.sh > /dev/null 2>&1
+source ~/esp/idf/export.sh > /dev/null 2>&1
 source ~/esp/esp-matter/export.sh > /dev/null 2>&1
 idf.py build > /dev/null || { echo "Build failed!"; exit 1; }
 echo "  Build complete"
