@@ -929,11 +929,11 @@
                     <div class="config-row">
                         <div class="config-item">
                             <label for="wwGpio">Warm White GPIO</label>
-                            <input type="number" id="wwGpio" min="0" max="23" value="6">
+                            <input type="number" id="wwGpio" min="0" max="23" value="22">
                         </div>
                         <div class="config-item">
                             <label for="cwGpio">Cool White GPIO</label>
-                            <input type="number" id="cwGpio" min="0" max="23" value="7">
+                            <input type="number" id="cwGpio" min="0" max="23" value="23">
                         </div>
                     </div>
 
@@ -1031,11 +1031,23 @@
             <div class="card">
                 <h2>Configuration Options</h2>
                 <div class="help-section">
-                    <p><strong>Warm White GPIO</strong> - PWM output pin connected to the warm white 0-10V module. Default: GPIO 4.</p>
-                    <p><strong>Cool White GPIO</strong> - PWM output pin connected to the cool white 0-10V module. Default: GPIO 5.</p>
+                    <p><strong>Warm White GPIO</strong> - PWM output pin connected to the warm white 0-10V module. Default: GPIO 22 (D4 on Seeed XIAO ESP32-C6).</p>
+                    <p><strong>Cool White GPIO</strong> - PWM output pin connected to the cool white 0-10V module. Default: GPIO 23 (D5 on Seeed XIAO ESP32-C6).</p>
                     <p><strong>Min Colour Temp</strong> - Coolest colour temperature in mireds (1,000,000 ÷ Kelvin). Default: 154 (6500K).</p>
                     <p><strong>Max Colour Temp</strong> - Warmest colour temperature in mireds. Default: 370 (2700K).</p>
                     <p><strong>Max Brightness</strong> - Caps the PWM duty cycle. Lower this to limit output power (1-255).</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Seeed XIAO ESP32-C6 Pin Mapping</h2>
+                <div class="help-section">
+                    <p>The "D" labels printed on the board do not match the GPIO numbers 1:1. Confirmed against Seeed's official pin diagram:</p>
+                    <p><strong>D4 = GPIO22</strong> <span>warm white PWM (default)</span></p>
+                    <p><strong>D5 = GPIO23</strong> <span>cool white PWM (default)</span></p>
+                    <p><strong>D6 = GPIO16</strong> <span>UART TX - avoid for PWM</span></p>
+                    <p><strong>D7 = GPIO17</strong> <span>UART RX - avoid for PWM</span></p>
+                    <p>GPIO6 and GPIO7 are not exposed on this board's header at all - if your dimmer modules show no voltage change, double check you're using GPIO22/23 (not 6/7) in the <code>ww_gpio</code>/<code>cw_gpio</code> settings above.</p>
                 </div>
             </div>
 
@@ -1080,8 +1092,9 @@
                     <p><strong>Lights don't respond</strong></p>
                     <ul>
                         <li>Check 0-10V module is powered and wired correctly</li>
-                        <li>Verify GPIO pins match your wiring (default WW=4, CW=5)</li>
+                        <li>Verify GPIO pins match your wiring (default WW=GPIO22/D4, CW=GPIO23/D5 on XIAO)</li>
                         <li>Use <code>config</code> command to confirm current settings</li>
+                        <li>Use <code>gpio_test 22</code> to verify the physical pin with a multimeter</li>
                     </ul>
                 </div>
             </div>

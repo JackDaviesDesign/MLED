@@ -28,6 +28,18 @@ ESP32-C6 based LED controller using Matter protocol over Thread network. Like WL
 - **Button:** GPIO9 (factory reset)
 - **Power:** 5V external supply
 
+### Seeed Studio XIAO ESP32-C6 Pin Mapping
+This board's silkscreen "D" labels do **not** match the raw GPIO numbers 1:1. Confirmed via Seeed's official pin diagram and verified on real hardware with a multimeter (toggling each GPIO directly while probing physical pins):
+
+| Silkscreen | GPIO | Notes |
+|------------|------|-------|
+| D4 | GPIO22 | warm white (WW) PWM, in this project's CCT variant |
+| D5 | GPIO23 | cool white (CW) PWM, in this project's CCT variant |
+| D6 | GPIO16 | UART TX — avoid for general PWM/GPIO use |
+| D7 | GPIO17 | UART RX — avoid for general PWM/GPIO use |
+
+GPIO6 and GPIO7 are **not exposed** on the XIAO ESP32-C6 header at all — an earlier revision of this firmware incorrectly defaulted `ww_gpio`/`cw_gpio` to 6/7, which silently drove pins that don't physically exist on this board while D4/D5 stayed disconnected. If you ever need to re-map pins, use the `gpio_test <n>` and `gpio_sweep` serial commands (see [app_serial_config.cpp](main/app_serial_config.cpp)) to verify a GPIO number against a physical pin directly, independent of LEDC/Matter.
+
 ## Development Commands
 
 ### Build & Flash

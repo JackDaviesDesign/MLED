@@ -1,13 +1,14 @@
-# TLED - Matter-over-Thread LED Controller
+# TLED - Matter-over-Thread CCT LED Controller
 
-A Matter-compatible LED strip controller for ESP32-C6 that works over Thread networking. Control addressable LED strips (WS2812B, SK6812, etc.) from Home Assistant, Apple Home, Google Home, or any Matter-compatible smart home platform.
+A Matter-compatible dual-channel CCT (warm white / cool white) controller for ESP32-C6 that works over Thread networking. Drive 0-10V dimmer modules from Home Assistant, Apple Home, Google Home, or any Matter-compatible smart home platform.
 
-> **Disclaimer:** This entire firmware was written by AI ([Claude](https://claude.ai) by Anthropic). I ([@maui1911](https://github.com/maui1911)) have not read or written a single line of code — I only provided direction, tested on real hardware, and deployed. Use at your own risk.
+> **Disclaimer:** This entire firmware was written by AI ([Claude](https://claude.ai) by Anthropic). I ([@JackDaviesDesign](https://github.com/JackDaviesDesign)) have not read or written a single line of code — I only provided direction, tested on real hardware, and deployed. Use at your own risk.
 
 ## Features
 
 - **Matter over Thread** - Native Matter protocol, no cloud or WiFi required
-- **Full RGB + RGBW control** - Color picker, brightness, on/off from your smart home app
+- **Dual CCT control** - Warm white + cool white channels with colour temperature slider in your smart home app
+- **0-10V PWM output** - Two independent PWM channels for industry-standard 0-10V dimmer modules
 - **Smooth transitions** - 300ms fades on all changes
 - **Thread mesh networking** - Self-healing network, device acts as a router
 - **Web-based installer** - Flash firmware directly from your browser
@@ -16,56 +17,61 @@ A Matter-compatible LED strip controller for ESP32-C6 that works over Thread net
 - **Temperature monitoring** - Chip temperature exposed to Home Assistant
 - **Health monitoring** - Watchdog timer, heap tracking, auto-reboot on hang
 - **Power-on behavior** - Configurable: restore last state, always on, or always off
-- **Built-in effects** - Rainbow, breathing, candle, chase (implemented but not yet user-accessible, untested)
 
 ## Hardware
 
-This project was developed for the **[DFRobot Beetle ESP32-C6](https://wiki.dfrobot.com/SKU_DFR1117_Beetle_ESP32_C6)** - a tiny 25mm × 20.5mm board that's perfect for embedding in LED strip projects. Any ESP32-C6 board should work, but the Beetle's small size makes it ideal.
+### What You Need
 
-### Requirements
-
-- **ESP32-C6 board** - DFRobot Beetle ESP32-C6 recommended (or any ESP32-C6)
-- **Addressable LED strip** - WS2812B, WS2811, or SK6812 (RGBW)
-- **5V power supply** - Size for your LED count (~60mA per LED at full white)
+- **ESP32-C6 board** - Seeed Studio XIAO ESP32-C6 or DFRobot Beetle ESP32-C6 (any ESP32-C6 works)
+- **0-10V PWM dimmer modules** - One per channel (warm white + cool white). These convert the ESP32's 3.3V PWM signal to the 0-10V control voltage your LED driver expects
+- **Mains-dimmable LED driver** - With 0-10V dimming input (e.g. DALI-capable or 0-10V drivers for panel lights, downlights, etc.)
 - **Thread border router** - HomePod Mini, Apple TV 4K, Google Nest Hub, or dedicated like SLZB-06/SMLight
 
-### 3D Printable Enclosure
+### Wiring
 
-A parametric OpenSCAD enclosure design is included in the `enclosure/` folder, sized specifically for the DFRobot Beetle ESP32-C6.
+```
+ESP32-C6                  0-10V Dimmer Module
+─────────                 ──────────────────────
+GPIO 22 (D4) ──────────── PWM input (warm white channel)
+GPIO 23 (D5) ──────────── PWM input (cool white channel)
+GND          ──────────── GND
+3.3V         ──────────── VCC (if module needs logic supply)
 
-<p align="center">
-  <img src="images/enclosure_render.png" alt="Enclosure render" width="400">
-  <img src="images/enclosure_photo.png" alt="Printed enclosure" width="300">
-</p>
+0-10V Dimmer Module       LED Driver
+──────────────────────    ──────────
+0-10V output  ─────────── 0-10V dim input
+```
 
-**Features:**
-- **Friction-fit lid** - No screws needed, snaps securely in place
-- **USB-C port cutout** - Easy access for flashing and power
-- **Wire slit** - Solder your wires first, then slide them into the enclosure
-- **Super compact** - Just slightly larger than the Beetle board itself
+> **Note:** GPIO numbers above are for the Seeed XIAO ESP32-C6. The silkscreen labels (D4, D5) do **not** match the GPIO numbers 1:1 — see [Pin Mapping](#seeed-xiao-esp32-c6-pin-mapping) below.
 
-Ready-to-print STL files (`tled_base.stl`, `tled_lid.stl`) are included in the `enclosure/` folder. If you want to tweak dimensions, open `tled_enclosure.scad` in [OpenSCAD](https://openscad.org/) - it's fully parametric so you can adjust wall thickness, tolerances, and ventilation hole sizes.
+### Seeed XIAO ESP32-C6 Pin Mapping
 
-**Printing tips:**
-- Print the base upside-down (opening facing up)
-- 0.2mm layer height works well
-- No supports needed
-- PLA or PETG recommended
+The "D" labels printed on the XIAO board do **not** match GPIO numbers directly. Verified against the official Seeed pin diagram:
+
+| Silkscreen | GPIO | Notes |
+|------------|------|-------|
+| D4 | GPIO22 | Warm white PWM (default) |
+| D5 | GPIO23 | Cool white PWM (default) |
+| D6 | GPIO16 | UART TX — avoid for PWM |
+| D7 | GPIO17 | UART RX — avoid for PWM |
+
+GPIO6 and GPIO7 are **not exposed** on the XIAO header at all. An earlier revision of this firmware defaulted to GPIO6/7, which silently drove non-existent pins while D4/D5 stayed at 0V. If your dimmer shows no voltage change, double-check you're using GPIO22/23.
 
 ## Quick Start
 
 ### 1. Flash the Firmware
 
-Visit the **[Web Installer](https://maui1911.github.io/TLED)** and click "Install TLED Firmware".
+Visit the **[Web Installer](https://JackDaviesDesign.github.io/TLED)** and click "Install TLED Firmware".
 
 > **Note:** Requires Chrome or Edge browser. If prompted, hold the BOOT button on your ESP32-C6 while clicking Install.
 
-### 2. Configure Your LED Strip
+### 2. Configure GPIO Pins and CCT Range
 
 1. Go to the **Configure** tab in the web installer
 2. Click **Connect to Device**
-3. Set your LED count, GPIO pin, and LED type
-4. Click **Save & Reboot**
+3. Set your warm white and cool white GPIO pins to match your wiring
+4. Adjust colour temperature range if needed (default: 154–370 mireds = 6500K–2700K)
+5. Click **Save & Reboot**
 
 ### 3. Commission to Your Smart Home
 
@@ -74,71 +80,54 @@ After reboot, a QR code will appear in the web installer. Scan it with:
 - **Apple Home** - Add Accessory → Scan QR Code
 - **Google Home** - Add Device → Matter-enabled device
 
+The device appears as a **colour temperature light** with a warm/cool slider and brightness control.
+
 ## Configuration Options
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| LED Count | 10 | Number of LEDs in your strip (1-1000) |
-| GPIO Pin | 5 | Data pin connected to LED strip |
-| LED Type | WS2812B | Chipset: WS2812B, WS2811, or SK6812 (RGBW) |
-| RGB Order | GRB | Color byte order (try others if colors are wrong) |
-| Max Brightness | 255 | Limits maximum brightness (saves power) |
-| White Mode | accurate | SK6812 RGBW white mixing: accurate, brighter, none, dual, or max |
-| Manual White | 0 | Manual SK6812 white channel level used by none/dual modes |
-| Channel Gains | 255 | Per-channel RGBW calibration gain (0-255) |
+| Warm White GPIO | 22 | PWM output pin for warm white 0-10V module (D4 on XIAO) |
+| Cool White GPIO | 23 | PWM output pin for cool white 0-10V module (D5 on XIAO) |
+| Min Colour Temp | 154 | Coolest end in mireds (154 = 6500K daylight) |
+| Max Colour Temp | 370 | Warmest end in mireds (370 = 2700K warm white) |
+| Max Brightness | 255 | Caps PWM duty cycle — lower to limit output |
+| PWM Frequency | 1000 Hz | Carrier frequency for dimmer modules |
 | Device Name | TLED | Name shown in your smart home app |
-| Power-on | restore | Behavior on power up: restore last state, on, or off |
-
-## Wiring
-
-```
-ESP32-C6          LED Strip
-─────────         ─────────
-GPIO 5    ────────  DIN (Data In)
-GND       ────────  GND
-                    5V  ──── External 5V Power Supply
-```
-
-> **Important:** Power your LED strip from an external 5V supply, not from the ESP32's 5V pin (except for very short strips).
+| Power-on | restore | Behaviour on power up: restore last state, on, or off |
 
 ## Serial Commands
 
-Connect via USB and use the serial console in the web installer, or any serial terminal at 115200 baud:
+Connect via USB and use the serial console in the web installer, or any terminal at 115200 baud:
 
 ```
-help                    Show available commands
-config                  Show current configuration
-set leds <n>            Set number of LEDs (1-1000)
-set gpio <n>            Set data GPIO pin
-set type <type>         Set LED type (ws2812b/ws2811/sk6812)
-set order <order>       Set RGB order (grb/rgb/brg/rbg/bgr/gbr)
-set brightness <1-255>  Set max brightness
-set name <name>         Set device name
-set poweron <mode>      Power-on behavior (restore/on/off)
-set white_mode <mode>   RGBW white mode (accurate/brighter/none/dual/max)
-set white <0-255>       Manual RGBW white channel level
-set gain_r <0-255>      Red channel gain
-set gain_g <0-255>      Green channel gain
-set gain_b <0-255>      Blue channel gain
-set gain_w <0-255>      White channel gain
-save                    Save configuration and reboot
-reboot                  Restart device
-factory                 Factory reset (erases settings & commissioning)
+help                     Show available commands
+config                   Show current configuration
+set ww_gpio <n>          Warm white PWM GPIO pin
+set cw_gpio <n>          Cool white PWM GPIO pin
+set pwm_freq <n>         PWM frequency in Hz (100-20000)
+set cct_min <n>          Min colour temp in mireds (coolest, e.g. 154 = 6500K)
+set cct_max <n>          Max colour temp in mireds (warmest, e.g. 370 = 2700K)
+set brightness <1-255>   Cap PWM duty cycle
+set name <name>          Set device name
+set poweron <mode>       Power-on behaviour (restore/on/off)
+save                     Save configuration and reboot
+reboot                   Restart device
+factory                  Factory reset (erases settings & commissioning)
+gpio_test <n>            Toggle GPIO n HIGH/LOW every 1s for 10s (hardware verification)
+gpio_sweep               Cycle through candidate GPIOs to identify physical pins
 ```
 
-### Matching WLED
+### Verifying Pin Wiring
 
-For SK6812 RGBW strips, TLED defaults to `white_mode accurate`, matching WLED's accurate auto-calculated white behavior by extracting the common RGB component into the white channel. Use `set white_mode brighter` if WLED is set to the brighter auto-calculate mode, `set white_mode none` for RGB plus a fixed manual white level, `set white_mode dual` to use manual white when nonzero and otherwise fall back to brighter mode, or `set white_mode max` to drive white from the strongest RGB channel.
+If you're not sure which GPIO corresponds to a physical pin on your board, use the diagnostic commands:
 
-To match an existing WLED installation, compare these settings first:
+```
+gpio_test 22    # Toggles GPIO22 HIGH/LOW for 10s — probe D4 with a meter
+gpio_test 23    # Toggles GPIO23 HIGH/LOW for 10s — probe D5 with a meter
+gpio_sweep      # Cycles through all candidate GPIOs, 4s each
+```
 
-- **Auto-calculate white channel from RGB:** start with `accurate`, then try `brighter` if the strip is dimmer than WLED.
-- **RGB order:** use `set order grb|rgb|brg|rbg|bgr|gbr` until red, green, and blue match.
-- **Brightness limiter:** match WLED's current limit with `set brightness <1-255>`, or leave both unlimited for calibration.
-- **White, gamma, and correction:** TLED applies only manual white and linear per-channel gains; disable WLED color correction/gamma while matching, or compensate with `gain_r`, `gain_g`, `gain_b`, and `gain_w`.
-- **Matter capability changes:** if a firmware update changes exposed Matter capabilities, remove and re-pair the device in your Matter controller after flashing.
-
-TLED does not currently expose Matter Color Temperature for RGBW white control. The current Matter endpoint is HSV/RGB brightness only, so this change keeps white mixing in firmware configuration instead of adding a new Color Temperature capability.
+These drive pins directly via `gpio_set_level`, bypassing LEDC/PWM, so you can verify the mapping with just a multimeter without needing the full 0-10V dimmer circuit.
 
 ## Building from Source
 
@@ -162,9 +151,6 @@ idf.py -p /dev/ttyACM0 flash
 
 # Flash with erase (clears commissioning - need to re-pair)
 idf.py -p /dev/ttyACM0 erase-flash flash
-
-# Monitor serial output
-idf.py -p /dev/ttyACM0 monitor
 ```
 
 ### Configuration via menuconfig
@@ -181,21 +167,23 @@ idf.py menuconfig
 - Hold the BOOT button while clicking Install
 - Try a different USB cable (some are charge-only)
 
-### "No bootable app partitions" / Boot loop
-- Flash was interrupted. Try flashing again.
+### Boot loop / "No bootable app"
+- Flash was interrupted — try flashing again
 
 ### Can't find device during commissioning
 - Commission within 30 seconds of boot (BLE advertising slows down)
 - Run `factory` command if device was previously commissioned
 - Move closer to your Thread border router
 
-### Wrong colors
-- Try different RGB Order settings (GRB → RGB → BGR → RBG)
+### Dimmer shows no voltage change
+- Check GPIO pin numbers match your wiring — see [Pin Mapping](#seeed-xiao-esp32-c6-pin-mapping)
+- Run `gpio_test 22` to verify the correct physical pin with a multimeter
+- Confirm the 0-10V module is powered independently
+- Run `config` to see what GPIO pins the firmware is currently using
 
-### LEDs don't light up
-- Check 5V power supply connection
-- Verify GPIO pin matches your wiring
-- Confirm LED count is correct
+### Device doesn't appear in Home Assistant
+- Ensure your Thread border router is active
+- Try `factory` reset and re-commission if device was already paired
 
 ## Project Structure
 
@@ -203,7 +191,7 @@ idf.py menuconfig
 TLED/
 ├── main/
 │   ├── app_main.cpp            # Matter setup, endpoint creation
-│   ├── app_driver.cpp          # LED strip driver, transitions, effects
+│   ├── app_driver.cpp          # PWM CCT driver, transitions
 │   ├── app_nvs_config.cpp      # Runtime configuration storage
 │   ├── app_serial_config.cpp   # USB serial command interface
 │   ├── app_monitoring.cpp      # Health monitoring, watchdog, temperature
@@ -213,10 +201,6 @@ TLED/
 ├── web-installer/
 │   ├── index.html              # Web installer & configurator
 │   └── manifest.json           # ESP Web Tools manifest
-├── enclosure/
-│   ├── tled_enclosure.scad     # OpenSCAD parametric enclosure design
-│   ├── tled_base.stl           # Pre-exported base STL
-│   └── tled_lid.stl            # Pre-exported lid STL
 ├── partitions.csv              # Flash partition layout
 └── sdkconfig.defaults          # Default SDK configuration
 ```
