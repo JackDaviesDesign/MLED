@@ -117,13 +117,14 @@ static void pwm_set_channels(light_driver_t *driver, float bri_normalized, float
     uint32_t ww_duty = (uint32_t)(ratio * effective_bri * TLED_PWM_MAX_DUTY);
     uint32_t cw_duty = (uint32_t)((1.0f - ratio) * effective_bri * TLED_PWM_MAX_DUTY);
 
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, ww_duty);
-    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
-    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, cw_duty);
-    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
+    esp_err_t r0 = ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, ww_duty);
+    esp_err_t r1 = ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+    esp_err_t r2 = ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1, cw_duty);
+    esp_err_t r3 = ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_1);
 
-    ESP_LOGD(TAG, "PWM: bri=%.2f cct=%.0f mireds ww=%lu cw=%lu",
-             effective_bri, cct_mireds, (unsigned long)ww_duty, (unsigned long)cw_duty);
+    ESP_LOGI(TAG, "PWM: bri=%.2f cct=%.0f ww=%lu cw=%lu err=%d/%d/%d/%d",
+             effective_bri, cct_mireds, (unsigned long)ww_duty, (unsigned long)cw_duty,
+             r0, r1, r2, r3);
 }
 
 static void apply_current_state(light_driver_t *driver)
@@ -523,27 +524,27 @@ app_driver_handle_t app_driver_light_init(void)
     ESP_ERROR_CHECK(ledc_timer_config(&timer_cfg));
 
     // Warm white channel
-    ledc_channel_config_t ww_cfg = {
-        .gpio_num = s_driver.ww_gpio,
-        .speed_mode = LEDC_LOW_SPEED_MODE,
-        .channel = LEDC_CHANNEL_0,
-        .intr_type = LEDC_INTR_DISABLE,
-        .timer_sel = LEDC_TIMER_0,
-        .duty = 0,
-        .hpoint = 0,
-    };
+    ledc_channel_config_t ww_cfg = {};
+    ww_cfg.gpio_num   = s_driver.ww_gpio;
+    ww_cfg.speed_mode = LEDC_LOW_SPEED_MODE;
+    ww_cfg.channel    = LEDC_CHANNEL_0;
+    ww_cfg.intr_type  = LEDC_INTR_DISABLE;
+    ww_cfg.timer_sel  = LEDC_TIMER_0;
+    ww_cfg.duty       = 0;
+    ww_cfg.hpoint     = 0;
+    ESP_LOGI(TAG, "LEDC WW: gpio=%d channel=0", s_driver.ww_gpio);
     ESP_ERROR_CHECK(ledc_channel_config(&ww_cfg));
 
     // Cool white channel
-    ledc_channel_config_t cw_cfg = {
-        .gpio_num = s_driver.cw_gpio,
-        .speed_mode = LEDC_LOW_SPEED_MODE,
-        .channel = LEDC_CHANNEL_1,
-        .intr_type = LEDC_INTR_DISABLE,
-        .timer_sel = LEDC_TIMER_0,
-        .duty = 0,
-        .hpoint = 0,
-    };
+    ledc_channel_config_t cw_cfg = {};
+    cw_cfg.gpio_num   = s_driver.cw_gpio;
+    cw_cfg.speed_mode = LEDC_LOW_SPEED_MODE;
+    cw_cfg.channel    = LEDC_CHANNEL_1;
+    cw_cfg.intr_type  = LEDC_INTR_DISABLE;
+    cw_cfg.timer_sel  = LEDC_TIMER_0;
+    cw_cfg.duty       = 0;
+    cw_cfg.hpoint     = 0;
+    ESP_LOGI(TAG, "LEDC CW: gpio=%d channel=1", s_driver.cw_gpio);
     ESP_ERROR_CHECK(ledc_channel_config(&cw_cfg));
 
     // Initial transition state
