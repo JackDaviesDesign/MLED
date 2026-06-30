@@ -886,7 +886,7 @@
                     </div>
                     <div class="step">
                         <span class="step-num">2</span>
-                        <span class="step-text">Set your <strong>LED count</strong>, <strong>GPIO pin</strong>, and strip type</span>
+                        <span class="step-text">Set your <strong>GPIO pins</strong> and colour temperature range</span>
                     </div>
                     <div class="step">
                         <span class="step-num">3</span>
@@ -924,36 +924,27 @@
             </div>
 
             <div class="card">
-                <h2>LED Configuration</h2>
+                <h2>PWM CCT Configuration</h2>
                 <div class="config-grid">
                     <div class="config-row">
                         <div class="config-item">
-                            <label for="numLeds">Number of LEDs</label>
-                            <input type="number" id="numLeds" min="1" max="1000" value="10">
+                            <label for="wwGpio">Warm White GPIO</label>
+                            <input type="number" id="wwGpio" min="0" max="23" value="4">
                         </div>
                         <div class="config-item">
-                            <label for="gpioPin">GPIO Pin</label>
-                            <input type="number" id="gpioPin" min="0" max="21" value="5">
+                            <label for="cwGpio">Cool White GPIO</label>
+                            <input type="number" id="cwGpio" min="0" max="23" value="5">
                         </div>
                     </div>
 
                     <div class="config-row">
                         <div class="config-item">
-                            <label for="ledType">LED Type</label>
-                            <select id="ledType">
-                                <option value="ws2812b">WS2812B</option>
-                                <option value="ws2811">WS2811</option>
-                                <option value="sk6812">SK6812 (RGBW)</option>
-                            </select>
+                            <label for="cctMin">Min Colour Temp (mireds)</label>
+                            <input type="number" id="cctMin" min="100" max="370" value="154" title="154 = 6500K cool white">
                         </div>
                         <div class="config-item">
-                            <label for="rgbOrder">Color Order</label>
-                            <select id="rgbOrder">
-                                <option value="grb">GRB</option>
-                                <option value="rgb">RGB</option>
-                                <option value="bgr">BGR</option>
-                                <option value="rbg">RBG</option>
-                            </select>
+                            <label for="cctMax">Max Colour Temp (mireds)</label>
+                            <input type="number" id="cctMax" min="154" max="600" value="370" title="370 = 2700K warm white">
                         </div>
                     </div>
 
@@ -964,7 +955,7 @@
 
                     <div class="btn-row">
                         <button id="saveBtn" class="btn btn-success" disabled>Save</button>
-                        <button id="saveRebootBtn" class="btn btn-success" disabled>Save & Reboot</button>
+                        <button id="saveRebootBtn" class="btn btn-success" disabled>Save &amp; Reboot</button>
                     </div>
                 </div>
             </div>
@@ -990,7 +981,7 @@
             <div class="card">
                 <h2>What is TLED?</h2>
                 <div class="help-section">
-                    <p>TLED turns an ESP32-C6 into a smart LED controller using <strong>Matter over Thread</strong>. Control WS2812B, SK6812, and similar strips through Home Assistant, Apple Home, or Google Home.</p>
+                    <p>MLED turns an ESP32-C6 into a smart dual-channel CCT controller using <strong>Matter over Thread</strong>. Drive 0-10V dimmers for warm white and cool white channels through Home Assistant, Apple Home, or Google Home.</p>
                     <div class="features">
                         <div class="feature">
                             <span class="feature-icon">&#x1F310;</span>
@@ -1000,10 +991,10 @@
                             </div>
                         </div>
                         <div class="feature">
-                            <span class="feature-icon">&#x1F3A8;</span>
+                            <span class="feature-icon">&#x1F4A1;</span>
                             <div class="feature-text">
-                                <strong>Full RGB</strong>
-                                Smooth color transitions & effects
+                                <strong>Dual CCT</strong>
+                                Warm + cool white with smooth transitions
                             </div>
                         </div>
                         <div class="feature">
@@ -1029,8 +1020,8 @@
                 <div class="help-section">
                     <ul>
                         <li><strong>ESP32-C6 board</strong> with USB-C (e.g., DFRobot Beetle)</li>
-                        <li><strong>Addressable LEDs</strong> - WS2812B, WS2811, or SK6812</li>
-                        <li><strong>5V power supply</strong> - ~60mA per LED at full white</li>
+                        <li><strong>0-10V PWM dimmer modules</strong> - one per channel (warm white + cool white)</li>
+                        <li><strong>Mains dimmable LED driver</strong> with 0-10V input</li>
                         <li><strong>Thread border router</strong> - HomePod Mini, Apple TV 4K, or SLZB-06</li>
                         <li><strong>Matter controller</strong> - Home Assistant, Apple Home, Google Home</li>
                     </ul>
@@ -1040,21 +1031,11 @@
             <div class="card">
                 <h2>Configuration Options</h2>
                 <div class="help-section">
-                    <p><strong>Number of LEDs</strong> - Total LEDs in your strip (1-1000)</p>
-                    <p><strong>GPIO Pin</strong> - Data pin for the LED strip. GPIO 5 works on most ESP32-C6 boards.</p>
-                    <p><strong>LED Type</strong></p>
-                    <ul>
-                        <li><code>WS2812B</code> - Most common, 800kHz</li>
-                        <li><code>WS2811</code> - Older, 400kHz</li>
-                        <li><code>SK6812</code> - Similar to WS2812B, some have RGBW</li>
-                    </ul>
-                    <p><strong>Color Order</strong> - If colors look wrong, try different orders:</p>
-                    <ul>
-                        <li><code>GRB</code> - Most WS2812B strips</li>
-                        <li><code>RGB</code> - Some WS2811 and older strips</li>
-                        <li><code>BGR</code> / <code>RBG</code> - Less common</li>
-                    </ul>
-                    <p><strong>Max Brightness</strong> - Limits power consumption and heat (1-255)</p>
+                    <p><strong>Warm White GPIO</strong> - PWM output pin connected to the warm white 0-10V module. Default: GPIO 4.</p>
+                    <p><strong>Cool White GPIO</strong> - PWM output pin connected to the cool white 0-10V module. Default: GPIO 5.</p>
+                    <p><strong>Min Colour Temp</strong> - Coolest colour temperature in mireds (1,000,000 ÷ Kelvin). Default: 154 (6500K).</p>
+                    <p><strong>Max Colour Temp</strong> - Warmest colour temperature in mireds. Default: 370 (2700K).</p>
+                    <p><strong>Max Brightness</strong> - Caps the PWM duty cycle. Lower this to limit output power (1-255).</p>
                 </div>
             </div>
 
@@ -1063,10 +1044,10 @@
                 <div class="help-section cmd-list">
                     <p><strong>help</strong> <span>Show available commands</span></p>
                     <p><strong>config</strong> <span>Show current settings</span></p>
-                    <p><strong>set leds &lt;n&gt;</strong> <span>Set LED count</span></p>
-                    <p><strong>set gpio &lt;n&gt;</strong> <span>Set data pin</span></p>
-                    <p><strong>set type &lt;type&gt;</strong> <span>ws2812b, ws2811, sk6812</span></p>
-                    <p><strong>set order &lt;order&gt;</strong> <span>grb, rgb, bgr, rbg</span></p>
+                    <p><strong>set ww_gpio &lt;n&gt;</strong> <span>Warm white PWM GPIO pin</span></p>
+                    <p><strong>set cw_gpio &lt;n&gt;</strong> <span>Cool white PWM GPIO pin</span></p>
+                    <p><strong>set cct_min &lt;n&gt;</strong> <span>Min colour temp in mireds (e.g. 154)</span></p>
+                    <p><strong>set cct_max &lt;n&gt;</strong> <span>Max colour temp in mireds (e.g. 370)</span></p>
                     <p><strong>set brightness &lt;n&gt;</strong> <span>Max brightness 1-255</span></p>
                     <p><strong>save</strong> <span>Save config to flash</span></p>
                     <p><strong>reboot</strong> <span>Restart device</span></p>
@@ -1096,16 +1077,11 @@
                         <li>Ensure Thread border router is nearby</li>
                     </ul>
 
-                    <p><strong>Wrong colors</strong></p>
+                    <p><strong>Lights don't respond</strong></p>
                     <ul>
-                        <li>Try different Color Order settings</li>
-                    </ul>
-
-                    <p><strong>LEDs don't light up</strong></p>
-                    <ul>
-                        <li>Check power - LEDs need 5V, not 3.3V</li>
-                        <li>Verify GPIO pin matches wiring</li>
-                        <li>Confirm LED count is correct</li>
+                        <li>Check 0-10V module is powered and wired correctly</li>
+                        <li>Verify GPIO pins match your wiring (default WW=4, CW=5)</li>
+                        <li>Use <code>config</code> command to confirm current settings</li>
                     </ul>
                 </div>
             </div>
@@ -1113,7 +1089,7 @@
     </div>
 
     <footer>
-        <p>TLED is open source &middot; <a href="https://github.com/maui1911/TLED" target="_blank">GitHub</a></p>
+        <p>MLED is open source &middot; <a href="https://github.com/JackDaviesDesign/MLED" target="_blank">GitHub</a></p>
     </footer>
 
     <script>
@@ -1269,20 +1245,20 @@
                 if (match) {
                     const [, key, value] = match;
                     switch (key) {
-                        case 'leds':
-                            document.getElementById('numLeds').value = value.trim();
+                        case 'ww_gpio':
+                            document.getElementById('wwGpio').value = value.trim();
                             break;
-                        case 'gpio':
-                            document.getElementById('gpioPin').value = value.trim();
+                        case 'cw_gpio':
+                            document.getElementById('cwGpio').value = value.trim();
                             break;
                         case 'brightness':
                             document.getElementById('maxBrightness').value = value.trim();
                             break;
-                        case 'type':
-                            document.getElementById('ledType').value = value.trim();
+                        case 'cct_min':
+                            document.getElementById('cctMin').value = value.trim().split(' ')[0];
                             break;
-                        case 'order':
-                            document.getElementById('rgbOrder').value = value.trim();
+                        case 'cct_max':
+                            document.getElementById('cctMax').value = value.trim().split(' ')[0];
                             break;
                     }
                 }
@@ -1297,23 +1273,27 @@
             }
         });
 
-        saveBtn.addEventListener('click', async () => {
-            const numLeds = document.getElementById('numLeds').value;
-            const gpioPin = document.getElementById('gpioPin').value;
-            const ledType = document.getElementById('ledType').value;
-            const rgbOrder = document.getElementById('rgbOrder').value;
+        async function applyConfig() {
+            const wwGpio = document.getElementById('wwGpio').value;
+            const cwGpio = document.getElementById('cwGpio').value;
+            const cctMin = document.getElementById('cctMin').value;
+            const cctMax = document.getElementById('cctMax').value;
             const maxBrightness = document.getElementById('maxBrightness').value;
 
-            await sendCommand(`set leds ${numLeds}`);
+            await sendCommand(`set ww_gpio ${wwGpio}`);
             await new Promise(r => setTimeout(r, 100));
-            await sendCommand(`set gpio ${gpioPin}`);
+            await sendCommand(`set cw_gpio ${cwGpio}`);
             await new Promise(r => setTimeout(r, 100));
-            await sendCommand(`set type ${ledType}`);
+            await sendCommand(`set cct_min ${cctMin}`);
             await new Promise(r => setTimeout(r, 100));
-            await sendCommand(`set order ${rgbOrder}`);
+            await sendCommand(`set cct_max ${cctMax}`);
             await new Promise(r => setTimeout(r, 100));
             await sendCommand(`set brightness ${maxBrightness}`);
             await new Promise(r => setTimeout(r, 100));
+        }
+
+        saveBtn.addEventListener('click', async () => {
+            await applyConfig();
             await sendCommand('save');
         });
 
@@ -1326,22 +1306,7 @@
         });
 
         saveRebootBtn.addEventListener('click', async () => {
-            const numLeds = document.getElementById('numLeds').value;
-            const gpioPin = document.getElementById('gpioPin').value;
-            const ledType = document.getElementById('ledType').value;
-            const rgbOrder = document.getElementById('rgbOrder').value;
-            const maxBrightness = document.getElementById('maxBrightness').value;
-
-            await sendCommand(`set leds ${numLeds}`);
-            await new Promise(r => setTimeout(r, 100));
-            await sendCommand(`set gpio ${gpioPin}`);
-            await new Promise(r => setTimeout(r, 100));
-            await sendCommand(`set type ${ledType}`);
-            await new Promise(r => setTimeout(r, 100));
-            await sendCommand(`set order ${rgbOrder}`);
-            await new Promise(r => setTimeout(r, 100));
-            await sendCommand(`set brightness ${maxBrightness}`);
-            await new Promise(r => setTimeout(r, 100));
+            await applyConfig();
             await sendCommand('save');
             await new Promise(r => setTimeout(r, 200));
             await sendCommand('reboot');
