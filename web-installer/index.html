@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TLED - Matter-over-Thread LED Controller</title>
+    <title>MLED - Matter-over-Thread LED Controller</title>
     <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -117,7 +117,7 @@
         }
 
         .logo::before {
-            content: 'TLED';
+            content: 'MLED';
             position: absolute;
             top: 0;
             left: 0;
@@ -831,7 +831,7 @@
     <div class="container">
         <header>
             <div class="logo-container">
-                <div class="logo">TLED<span class="version-badge">v0.2.1</span></div>
+                <div class="logo">MLED<span class="version-badge">v0.2.1</span></div>
             </div>
             <p class="tagline">Matter <span>+</span> Thread <span>+</span> LEDs</p>
         </header>
@@ -870,7 +870,7 @@
                     <h3>Flash Firmware to ESP32-C6</h3>
                     <p>Connect your board via USB and click below. Works directly in Chrome or Edge - no software install needed.</p>
                     <esp-web-install-button manifest="manifest.json">
-                        <button slot="activate">Install TLED</button>
+                        <button slot="activate">Install MLED</button>
                         <span slot="unsupported">Web Serial not supported. Use Chrome or Edge on desktop.</span>
                         <span slot="not-allowed">Serial access blocked. Ensure you're using HTTPS.</span>
                     </esp-web-install-button>
@@ -979,7 +979,7 @@
         <!-- Help Tab -->
         <div id="help" class="tab-content">
             <div class="card">
-                <h2>What is TLED?</h2>
+                <h2>What is MLED?</h2>
                 <div class="help-section">
                     <p>MLED turns an ESP32-C6 into a smart dual-channel CCT controller using <strong>Matter over Thread</strong>. Drive 0-10V dimmers for warm white and cool white channels through Home Assistant, Apple Home, or Google Home.</p>
                     <div class="features">

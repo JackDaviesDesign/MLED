@@ -1,4 +1,4 @@
-# TLED - Matter-over-Thread CCT LED Controller
+# MLED - Matter-over-Thread CCT LED Controller
 
 A Matter-compatible dual-channel CCT (warm white / cool white) controller for ESP32-C6 that works over Thread networking. Drive 0-10V dimmer modules from Home Assistant, Apple Home, Google Home, or any Matter-compatible smart home platform.
 
@@ -61,7 +61,7 @@ GPIO6 and GPIO7 are **not exposed** on the XIAO header at all. An earlier revisi
 
 ### 1. Flash the Firmware
 
-Visit the **[Web Installer](https://JackDaviesDesign.github.io/TLED)** and click "Install TLED Firmware".
+Visit the **[Web Installer](https://JackDaviesDesign.github.io/MLED)** and click "Install MLED Firmware".
 
 > **Note:** Requires Chrome or Edge browser. If prompted, hold the BOOT button on your ESP32-C6 while clicking Install.
 
@@ -92,7 +92,7 @@ The device appears as a **colour temperature light** with a warm/cool slider and
 | Max Colour Temp | 370 | Warmest end in mireds (370 = 2700K warm white) |
 | Max Brightness | 255 | Caps PWM duty cycle — lower to limit output |
 | PWM Frequency | 1000 Hz | Carrier frequency for dimmer modules |
-| Device Name | TLED | Name shown in your smart home app |
+| Device Name | MLED | Name shown in your smart home app |
 | Power-on | restore | Behaviour on power up: restore last state, on, or off |
 
 ## Serial Commands
@@ -157,7 +157,7 @@ idf.py -p /dev/ttyACM0 erase-flash flash
 
 ```bash
 idf.py menuconfig
-# Navigate to "TLED Configuration" for build-time defaults
+# Navigate to "MLED Configuration" for build-time defaults
 ```
 
 ## Troubleshooting
@@ -188,7 +188,7 @@ idf.py menuconfig
 ## Project Structure
 
 ```
-TLED/
+MLED/
 ├── main/
 │   ├── app_main.cpp            # Matter setup, endpoint creation
 │   ├── app_driver.cpp          # PWM CCT driver, transitions
