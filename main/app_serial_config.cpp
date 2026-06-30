@@ -12,6 +12,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "driver/usb_serial_jtag.h"
+#include "driver/gpio.h"
 #include "esp_log.h"
 #include "esp_system.h"
 #include <esp_matter.h>
@@ -128,6 +129,58 @@ static void process_command(const char *cmd) {
         tled_config_save();
         vTaskDelay(pdMS_TO_TICKS(500));
         esp_matter::factory_reset();
+    } else if (strcmp(command, "gpio_test") == 0 && parsed >= 2) {
+        int n = atoi(param);
+        int cycles = (parsed >= 3) ? atoi(value) : 5;
+        if (cycles < 1) cycles = 1;
+        if (n < 0 || n > 23) {
+            serial_write("GPIO must be 0-23\r\n");
+        } else {
+            serial_printf("Toggling GPIO%d for %ds (3.3V <-> 0V every 1s). Probe now.\r\n", n, cycles * 2);
+            gpio_config_t io_conf = {};
+            io_conf.pin_bit_mask = (1ULL << n);
+            io_conf.mode = GPIO_MODE_OUTPUT;
+            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+            io_conf.intr_type = GPIO_INTR_DISABLE;
+            gpio_config(&io_conf);
+            for (int i = 0; i < cycles; i++) {
+                gpio_set_level((gpio_num_t)n, 1);
+                serial_printf("  GPIO%d -> HIGH (3.3V)\r\n", n);
+                vTaskDelay(pdMS_TO_TICKS(1000));
+                gpio_set_level((gpio_num_t)n, 0);
+                serial_printf("  GPIO%d -> LOW (0V)\r\n", n);
+                vTaskDelay(pdMS_TO_TICKS(1000));
+            }
+            gpio_reset_pin((gpio_num_t)n);
+            serial_printf("GPIO%d test done, pin reset.\r\n", n);
+        }
+    } else if (strcmp(command, "gpio_sweep") == 0) {
+        const int pins[] = {0, 1, 2, 6, 7, 10, 15, 18, 19, 20, 21, 22, 23};
+        const int num_pins = sizeof(pins) / sizeof(pins[0]);
+        serial_write("Sweeping candidate GPIOs, 4s each (2s HIGH, 2s LOW). Watch your meter.\r\n");
+        for (int i = 0; i < num_pins; i++) {
+            int n = pins[i];
+            serial_printf(">>> GPIO%d <<<\r\n", n);
+            gpio_config_t io_conf = {};
+            io_conf.pin_bit_mask = (1ULL << n);
+            io_conf.mode = GPIO_MODE_OUTPUT;
+            io_conf.pull_up_en = GPIO_PULLUP_DISABLE;
+            io_conf.pull_down_en = GPIO_PULLDOWN_DISABLE;
+            io_conf.intr_type = GPIO_INTR_DISABLE;
+            if (gpio_config(&io_conf) != ESP_OK) {
+                serial_printf("  GPIO%d: config failed, skipping\r\n", n);
+                continue;
+            }
+            gpio_set_level((gpio_num_t)n, 1);
+            serial_printf("  GPIO%d -> HIGH\r\n", n);
+            vTaskDelay(pdMS_TO_TICKS(2000));
+            gpio_set_level((gpio_num_t)n, 0);
+            serial_printf("  GPIO%d -> LOW\r\n", n);
+            vTaskDelay(pdMS_TO_TICKS(2000));
+            gpio_reset_pin((gpio_num_t)n);
+        }
+        serial_write("Sweep complete.\r\n");
     } else {
         serial_printf("Unknown command: %s\r\n", command);
         serial_write("Type 'help' for available commands\r\n");
@@ -149,6 +202,8 @@ static void print_help(void) {
     serial_write("  save               - Save config and reboot\r\n");
     serial_write("  reboot             - Reboot without saving\r\n");
     serial_write("  factory            - Reset to factory defaults\r\n");
+    serial_write("  gpio_test <n>      - Toggle GPIO n HIGH/LOW every 1s for 10s\r\n");
+    serial_write("  gpio_sweep         - Cycle through candidate GPIOs, 4s each\r\n");
     serial_write("\r\n");
 }
 
