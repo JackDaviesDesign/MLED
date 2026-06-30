@@ -2,19 +2,23 @@ menu "TLED Configuration"
 
     config TLED_WW_GPIO_PIN
         int "Warm white PWM GPIO pin"
-        default 4
+        default 22
         range 0 23
         help
             GPIO pin for the warm white 0-10V PWM module.
-            Avoid: GPIO9 (boot button), GPIO12-13 (USB), GPIO15 (onboard LED).
+            On Seeed XIAO ESP32-C6, D4 = GPIO22, D5 = GPIO23.
+            Avoid: GPIO9 (boot button), GPIO12-13 (USB), GPIO15 (onboard LED),
+            GPIO16/17 (D6/D7, wired to UART TX/RX on XIAO).
 
     config TLED_CW_GPIO_PIN
         int "Cool white PWM GPIO pin"
-        default 5
+        default 23
         range 0 23
         help
             GPIO pin for the cool white 0-10V PWM module.
-            Avoid: GPIO9 (boot button), GPIO12-13 (USB), GPIO15 (onboard LED).
+            On Seeed XIAO ESP32-C6, D4 = GPIO22, D5 = GPIO23.
+            Avoid: GPIO9 (boot button), GPIO12-13 (USB), GPIO15 (onboard LED),
+            GPIO16/17 (D6/D7, wired to UART TX/RX on XIAO).
 
     config TLED_PWM_FREQ_HZ
         int "PWM frequency (Hz)"
