@@ -1,0 +1,18 @@
+{
+  "name": "TLED - Matter LED Controller",
+  "version": "0.7.1",
+  "home_assistant_domain": "matter",
+  "funding_url": "https://github.com/sponsors/your-username",
+  "new_install_prompt_erase": true,
+  "builds": [
+    {
+      "chipFamily": "ESP32-C6",
+      "parts": [
+        { "path": "firmware/bootloader.bin", "offset": 0 },
+        { "path": "firmware/partition-table.bin", "offset": 49152 },
+        { "path": "firmware/ota_data_initial.bin", "offset": 118784 },
+        { "path": "firmware/tled.bin", "offset": 131072 }
+      ]
+    }
+  ]
+}

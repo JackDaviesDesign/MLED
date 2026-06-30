@@ -1,0 +1,62 @@
+menu "TLED Configuration"
+
+    config TLED_WW_GPIO_PIN
+        int "Warm white PWM GPIO pin"
+        default 4
+        range 0 23
+        help
+            GPIO pin for the warm white 0-10V PWM module.
+            Avoid: GPIO9 (boot button), GPIO12-13 (USB), GPIO15 (onboard LED).
+
+    config TLED_CW_GPIO_PIN
+        int "Cool white PWM GPIO pin"
+        default 5
+        range 0 23
+        help
+            GPIO pin for the cool white 0-10V PWM module.
+            Avoid: GPIO9 (boot button), GPIO12-13 (USB), GPIO15 (onboard LED).
+
+    config TLED_PWM_FREQ_HZ
+        int "PWM frequency (Hz)"
+        default 1000
+        range 100 20000
+        help
+            PWM carrier frequency for the 0-10V dimmer modules.
+            1000 Hz works well for most modules. Higher values may reduce
+            audible buzz but check your module's spec.
+
+    config TLED_COLOR_TEMP_MIN
+        int "Minimum color temperature (mireds)"
+        default 154
+        range 100 370
+        help
+            Coolest color temperature in mireds (1,000,000 / Kelvin).
+            154 mireds = 6500K (daylight cool white).
+            Shown as the cool end in Home Assistant.
+
+    config TLED_COLOR_TEMP_MAX
+        int "Maximum color temperature (mireds)"
+        default 370
+        range 154 600
+        help
+            Warmest color temperature in mireds (1,000,000 / Kelvin).
+            370 mireds = 2700K (warm white).
+            Shown as the warm end in Home Assistant.
+
+    config TLED_MAX_BRIGHTNESS
+        int "Maximum brightness (0-255)"
+        default 255
+        range 1 255
+        help
+            Safety limit for maximum PWM duty cycle.
+            Lower this to cap output power.
+
+    config TLED_DEFAULT_TRANSITION_MS
+        int "Default transition time (ms)"
+        default 300
+        range 0 5000
+        help
+            Default fade duration for color/brightness changes.
+            Set to 0 for instant changes.
+
+endmenu
