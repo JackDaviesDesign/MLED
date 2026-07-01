@@ -313,29 +313,9 @@
             display: block;
         }
 
-        esp-web-install-button::part(button) {
-            font-family: 'JetBrains Mono', monospace;
-            background: linear-gradient(135deg, var(--cyan), #00c4a7);
-            color: var(--bg-deep);
-            border: none;
-            border-radius: 6px;
-            padding: 1rem 2.5rem;
-            font-size: 0.9rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow:
-                0 0 20px var(--cyan-dim),
-                0 4px 20px rgba(0, 0, 0, 0.3);
-        }
-
-        esp-web-install-button::part(button):hover {
-            transform: translateY(-2px);
-            box-shadow:
-                0 0 30px var(--cyan-glow),
-                0 8px 30px rgba(0, 0, 0, 0.4);
+        esp-web-install-button button[slot="activate"] {
+            width: 100%;
+            padding: 0.75rem 1.25rem;
         }
 
         esp-web-install-button [slot="unsupported"],
@@ -926,7 +906,7 @@
                         <p id="variantDesc" class="variant-desc">Controls two 0-10V dimmer modules for warm and cool white. Appears as a colour temperature light in Home Assistant.</p>
                     </div>
                     <esp-web-install-button manifest="manifest.json">
-                        <button slot="activate">Install MLED</button>
+                        <button slot="activate" class="btn btn-primary">Install MLED</button>
                         <span slot="unsupported">Web Serial not supported. Use Chrome or Edge on desktop.</span>
                         <span slot="not-allowed">Serial access blocked. Ensure you're using HTTPS.</span>
                     </esp-web-install-button>
