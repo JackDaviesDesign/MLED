@@ -284,6 +284,21 @@ extern "C" void app_main()
     node_t *node = node::create(&node_config, app_attribute_update_cb, app_identification_cb);
     ABORT_APP_ON_FAILURE(node != nullptr, ESP_LOGE(TAG, "Failed to create Matter node"));
 
+#if CONFIG_MLED_SINGLE_CHANNEL
+    /* Create Dimmable Light for single-channel 0-10V control */
+    dimmable_light::config_t light_config;
+    light_config.on_off.on_off = TLED_DEFAULT_POWER;
+    light_config.on_off_lighting.start_up_on_off = nullptr;
+    light_config.level_control.current_level = TLED_DEFAULT_BRIGHTNESS;
+    light_config.level_control.on_level = TLED_DEFAULT_BRIGHTNESS;
+    light_config.level_control_lighting.start_up_current_level = nullptr;
+
+    endpoint_t *endpoint = dimmable_light::create(node, &light_config, ENDPOINT_FLAG_NONE, light_handle);
+    ABORT_APP_ON_FAILURE(endpoint != nullptr, ESP_LOGE(TAG, "Failed to create dimmable light endpoint"));
+
+    light_endpoint_id = endpoint::get_id(endpoint);
+    ESP_LOGI(TAG, "Dimmable Light (single channel) created with endpoint_id %d", light_endpoint_id);
+#else
     /* Create Color Temperature Light for dual CCT PWM control */
     color_temperature_light::config_t light_config;
     light_config.on_off.on_off = TLED_DEFAULT_POWER;
@@ -305,6 +320,7 @@ extern "C" void app_main()
 
     light_endpoint_id = endpoint::get_id(endpoint);
     ESP_LOGI(TAG, "Color Temperature Light (CCT) created with endpoint_id %d", light_endpoint_id);
+#endif
 
     /* Create Temperature Sensor endpoint to expose chip temperature */
     temperature_sensor::config_t temp_config;

@@ -1,0 +1,2 @@
+# MLED single-channel override — enable single-channel dimmable mode
+CONFIG_MLED_SINGLE_CHANNEL=y

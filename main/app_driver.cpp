@@ -99,20 +99,24 @@ static light_driver_t s_driver = {
 
 static void pwm_set_channels(light_driver_t *driver, float bri_normalized, float cct_mireds)
 {
-    // Clamp
     if (bri_normalized < 0.0f) bri_normalized = 0.0f;
     if (bri_normalized > 1.0f) bri_normalized = 1.0f;
 
+    float max_scale = (float)driver->max_brightness / 255.0f;
+    float effective_bri = bri_normalized * max_scale;
+
+#if CONFIG_MLED_SINGLE_CHANNEL
+    uint32_t ww_duty = (uint32_t)(effective_bri * TLED_PWM_MAX_DUTY);
+    ledc_set_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, ww_duty);
+    ledc_update_duty(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0);
+    ESP_LOGI(TAG, "PWM single: bri=%.2f duty=%lu", effective_bri, (unsigned long)ww_duty);
+#else
     float cct_range = (float)(driver->color_temp_max - driver->color_temp_min);
     float ratio = (cct_range > 0.0f)
         ? (cct_mireds - (float)driver->color_temp_min) / cct_range
         : 0.5f;
     if (ratio < 0.0f) ratio = 0.0f;
     if (ratio > 1.0f) ratio = 1.0f;
-
-    // Apply max_brightness scaling
-    float max_scale = (float)driver->max_brightness / 255.0f;
-    float effective_bri = bri_normalized * max_scale;
 
     uint32_t ww_duty = (uint32_t)(ratio * effective_bri * TLED_PWM_MAX_DUTY);
     uint32_t cw_duty = (uint32_t)((1.0f - ratio) * effective_bri * TLED_PWM_MAX_DUTY);
@@ -125,6 +129,7 @@ static void pwm_set_channels(light_driver_t *driver, float bri_normalized, float
     ESP_LOGI(TAG, "PWM: bri=%.2f cct=%.0f ww=%lu cw=%lu err=%d/%d/%d/%d",
              effective_bri, cct_mireds, (unsigned long)ww_duty, (unsigned long)cw_duty,
              r0, r1, r2, r3);
+#endif
 }
 
 static void apply_current_state(light_driver_t *driver)
@@ -402,6 +407,7 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle,
         if (attribute_id == LevelControl::Attributes::CurrentLevel::Id) {
             return app_driver_light_set_brightness(driver_handle, val->val.u8);
         }
+#if !CONFIG_MLED_SINGLE_CHANNEL
     } else if (cluster_id == ColorControl::Id) {
         if (attribute_id == ColorControl::Attributes::ColorTemperatureMireds::Id) {
             // Debounce rapid CCT updates from HA sliders
@@ -413,6 +419,9 @@ esp_err_t app_driver_attribute_update(app_driver_handle_t driver_handle,
             schedule_save_state_to_nvs();
         }
     }
+#else
+    }
+#endif
 
     return ESP_OK;
 }
@@ -458,8 +467,10 @@ esp_err_t app_driver_light_set_defaults(uint16_t endpoint_id)
     val = esp_matter_uint8(driver->brightness);
     attribute::update(endpoint_id, LevelControl::Id, LevelControl::Attributes::CurrentLevel::Id, &val);
 
+#if !CONFIG_MLED_SINGLE_CHANNEL
     val = esp_matter_uint16(driver->color_temp);
     attribute::update(endpoint_id, ColorControl::Id, ColorControl::Attributes::ColorTemperatureMireds::Id, &val);
+#endif
 
     // Sync transition state
     driver->transition.current_bri = driver->power ? (float)driver->brightness : 0.0f;
@@ -535,6 +546,7 @@ app_driver_handle_t app_driver_light_init(void)
     ESP_LOGI(TAG, "LEDC WW: gpio=%d channel=0", s_driver.ww_gpio);
     ESP_ERROR_CHECK(ledc_channel_config(&ww_cfg));
 
+#if !CONFIG_MLED_SINGLE_CHANNEL
     // Cool white channel
     ledc_channel_config_t cw_cfg = {};
     cw_cfg.gpio_num   = s_driver.cw_gpio;
@@ -546,6 +558,7 @@ app_driver_handle_t app_driver_light_init(void)
     cw_cfg.hpoint     = 0;
     ESP_LOGI(TAG, "LEDC CW: gpio=%d channel=1", s_driver.cw_gpio);
     ESP_ERROR_CHECK(ledc_channel_config(&cw_cfg));
+#endif
 
     // Initial transition state
     s_driver.transition.current_bri = 0.0f;

@@ -1,5 +1,15 @@
 menu "TLED Configuration"
 
+    config MLED_SINGLE_CHANNEL
+        bool "Single channel mode (brightness only, no CCT)"
+        default n
+        help
+            When enabled, the device acts as a single-channel 0-10V dimmer.
+            Only the warm white GPIO is driven; the cool white GPIO is unused.
+            The Matter device type becomes dimmable_light (brightness + on/off,
+            no colour temperature slider). Requires re-commissioning if switching
+            from CCT mode.
+
     config TLED_WW_GPIO_PIN
         int "Warm white PWM GPIO pin"
         default 22

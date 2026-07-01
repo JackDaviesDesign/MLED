@@ -815,6 +815,54 @@
             color: var(--text);
         }
 
+        /* Variant selector */
+        .variant-select {
+            margin: 1.25rem 0 1rem;
+            text-align: left;
+        }
+
+        .variant-select label {
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--cyan);
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+
+        .variant-select select {
+            width: 100%;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-bright);
+            border-radius: 4px;
+            color: var(--text);
+            padding: 0.65rem 0.85rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.95rem;
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b949e' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.85rem center;
+        }
+
+        .variant-select select:focus {
+            outline: none;
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 2px var(--cyan-dim);
+        }
+
+        .variant-desc {
+            margin-top: 0.6rem;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+
+        /* Hide CCT-specific fields in single-channel mode */
+        .single-mode .cct-only {
+            display: none;
+        }
+
         /* Responsive */
         @media (max-width: 600px) {
             .logo { font-size: 3rem; }
@@ -869,6 +917,14 @@
                     </div>
                     <h3>Flash Firmware to ESP32-C6</h3>
                     <p>Connect your board via USB and click below. Works directly in Chrome or Edge - no software install needed.</p>
+                    <div class="variant-select">
+                        <label for="variantSelect">// VARIANT</label>
+                        <select id="variantSelect">
+                            <option value="manifest.json">CCT Dual Channel — warm + cool white</option>
+                            <option value="manifest-single.json">Single Channel — brightness only</option>
+                        </select>
+                        <p id="variantDesc" class="variant-desc">Controls two 0-10V dimmer modules for warm and cool white. Appears as a colour temperature light in Home Assistant.</p>
+                    </div>
                     <esp-web-install-button manifest="manifest.json">
                         <button slot="activate">Install MLED</button>
                         <span slot="unsupported">Web Serial not supported. Use Chrome or Edge on desktop.</span>
@@ -931,13 +987,13 @@
                             <label for="wwGpio">Warm White GPIO</label>
                             <input type="number" id="wwGpio" min="0" max="23" value="22">
                         </div>
-                        <div class="config-item">
+                        <div class="config-item cct-only">
                             <label for="cwGpio">Cool White GPIO</label>
                             <input type="number" id="cwGpio" min="0" max="23" value="23">
                         </div>
                     </div>
 
-                    <div class="config-row">
+                    <div class="config-row cct-only">
                         <div class="config-item">
                             <label for="cctMin">Min Colour Temp (mireds)</label>
                             <input type="number" id="cctMin" min="100" max="370" value="154" title="154 = 6500K cool white">
@@ -1106,6 +1162,20 @@
     </footer>
 
     <script>
+        // Variant selector
+        const variantDescriptions = {
+            'manifest.json': 'Controls two 0-10V dimmer modules for warm and cool white. Appears as a colour temperature light in Home Assistant.',
+            'manifest-single.json': 'Controls a single 0-10V dimmer module. Appears as a dimmable light (brightness only) in Home Assistant.'
+        };
+
+        document.getElementById('variantSelect').addEventListener('change', function() {
+            const manifest = this.value;
+            document.querySelector('esp-web-install-button').setAttribute('manifest', manifest);
+            document.getElementById('variantDesc').textContent = variantDescriptions[manifest] || '';
+            const isSingle = manifest === 'manifest-single.json';
+            document.getElementById('configure').classList.toggle('single-mode', isSingle);
+        });
+
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
