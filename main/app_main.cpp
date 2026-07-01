@@ -285,19 +285,21 @@ extern "C" void app_main()
     ABORT_APP_ON_FAILURE(node != nullptr, ESP_LOGE(TAG, "Failed to create Matter node"));
 
 #if CONFIG_MLED_SINGLE_CHANNEL
-    /* Create Dimmable Light for single-channel 0-10V control */
-    dimmable_light::config_t light_config;
+    /* Create Dimmable Plug-in Unit for single-channel 0-10V control.
+     * This device type (0x010B) causes Apple Home to show only a brightness
+     * slider, unlike dimmable_light (0x0101) which Apple Home renders with CCT. */
+    dimmable_plug_in_unit::config_t light_config;
     light_config.on_off.on_off = TLED_DEFAULT_POWER;
     light_config.on_off_lighting.start_up_on_off = nullptr;
     light_config.level_control.current_level = TLED_DEFAULT_BRIGHTNESS;
     light_config.level_control.on_level = TLED_DEFAULT_BRIGHTNESS;
     light_config.level_control_lighting.start_up_current_level = nullptr;
 
-    endpoint_t *endpoint = dimmable_light::create(node, &light_config, ENDPOINT_FLAG_NONE, light_handle);
-    ABORT_APP_ON_FAILURE(endpoint != nullptr, ESP_LOGE(TAG, "Failed to create dimmable light endpoint"));
+    endpoint_t *endpoint = dimmable_plug_in_unit::create(node, &light_config, ENDPOINT_FLAG_NONE, light_handle);
+    ABORT_APP_ON_FAILURE(endpoint != nullptr, ESP_LOGE(TAG, "Failed to create dimmable plug-in unit endpoint"));
 
     light_endpoint_id = endpoint::get_id(endpoint);
-    ESP_LOGI(TAG, "Dimmable Light (single channel) created with endpoint_id %d", light_endpoint_id);
+    ESP_LOGI(TAG, "Dimmable Plug-in Unit (single channel) created with endpoint_id %d", light_endpoint_id);
 #else
     /* Create Color Temperature Light for dual CCT PWM control */
     color_temperature_light::config_t light_config;
